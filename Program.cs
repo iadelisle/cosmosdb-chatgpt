@@ -1,15 +1,69 @@
 using Cosmos.Chat.GPT.Options;
 using Cosmos.Chat.GPT.Services;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
+
+
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.AzureAD.UI;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.Identity.Web.UI;
+using Microsoft.Identity.Web;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.Authentication.Cookies;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.RegisterConfiguration();
-builder.Services.AddRazorPages();
+  
+  builder.Services.AddRazorPages().AddMvcOptions(options =>
+  {
+   var policy = new AuthorizationPolicyBuilder()
+                 .RequireAuthenticatedUser()
+                 .Build();
+             options.Filters.Add(new AuthorizeFilter(policy));
+  }).AddMicrosoftIdentityUI();
+ 
+
 builder.Services.AddServerSideBlazor();
+
+// Add Microsoft Identity
+
+// builder.Services.AddScoped<MicrosoftIdentityService>();
+
+
+// Add Microsoft Identity UI
+
+// builder.Services.Configure<OpenIdConnectOptions>(OpenIdConnectDefaults.OpenIdConnectScheme, options =>
+// {
+//     options.Events.OnTokenValidated = async context =>
+//     {
+//         // Add logic here to add additional claims or modify existing ones
+//     };
+// });
+
+
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    options.Secure = CookieSecurePolicy.Always;
+    options.HttpOnly = 0;
+    options.MinimumSameSitePolicy = SameSiteMode.Strict;
+});
+
+builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+       .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
+
+
 builder.Services.RegisterServices();
 
+
+
+
+
 var app = builder.Build();
+
 
 if (!app.Environment.IsDevelopment())
 {
@@ -21,11 +75,25 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
+// Use Authentication and Authorization
+
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+  // More code
+  app.UseEndpoints(endpoints =>
+  {
+   endpoints.MapRazorPages();  // If Razor pages
+   endpoints.MapControllers(); // Needs to be added
+  });
+ 
+
+
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
 await app.RunAsync();
-
 static class ProgramExtensions
 {
     public static void RegisterConfiguration(this WebApplicationBuilder builder)
@@ -35,6 +103,7 @@ static class ProgramExtensions
 
         builder.Services.AddOptions<OpenAi>()
             .Bind(builder.Configuration.GetSection(nameof(OpenAi)));
+
     }
 
     public static void RegisterServices(this IServiceCollection services)

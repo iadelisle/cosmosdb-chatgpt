@@ -1,6 +1,14 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@inject NavigationManager NavigationManager
+
+<Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+            <NotAuthorized>
+                <h3>You're not authorized to view this page.</h3>
+                <button @onclick="RedirectToLogin">Go to Login</button>
+            </NotAuthorized>
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
     <NotFound>
@@ -10,3 +18,10 @@
         </LayoutView>
     </NotFound>
 </Router>
+
+@code {
+    private void RedirectToLogin()
+    {
+        NavigationManager.NavigateTo("/LoginPage", true);
+    }
+}
