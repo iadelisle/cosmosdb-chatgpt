@@ -53,7 +53,15 @@ builder.Services.Configure<CookiePolicyOptions>(options =>
 });
 
 builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-       .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
+       .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"))
+       .EnableTokenAcquisitionToCallDownstreamApi(new string[] { "User.Read" })
+       .AddSessionTokenCaches()
+       .AddCookiePolicy(options =>
+       {
+           options.Secure = CookieSecurePolicy.Always;
+           options.HttpOnly = 0;
+           options.MinimumSameSitePolicy = SameSiteMode.Lax;
+       });
 
 
 builder.Services.RegisterServices();
