@@ -89,6 +89,7 @@ static class ProgramExtensions
 
         builder.Services.AddOptions<OpenAi>()
             .Bind(builder.Configuration.GetSection(nameof(OpenAi)));
+
         builder.Services.AddRazorPages().AddMvcOptions(options =>
             {
             var policy = new AuthorizationPolicyBuilder()
@@ -96,18 +97,16 @@ static class ProgramExtensions
                             .Build();
                         options.Filters.Add(new AuthorizeFilter(policy));
             });
+            
+        builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+            .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
 
         builder.Services.Configure<CookiePolicyOptions>(options =>
         {
             options.Secure = CookieSecurePolicy.Always;
             options.HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always;
-            options.MinimumSameSitePolicy = SameSiteMode.None;
+            options.MinimumSameSitePolicy = SameSiteMode.Lax;
         });
-
-            
-        builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-            .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
-
 
 
 
