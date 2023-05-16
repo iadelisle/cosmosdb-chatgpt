@@ -20,8 +20,14 @@
 </Router>
 
 @code {
-    private void RedirectToLogin()
+
+    public void RedirectToLogin()
     {
-        NavigationManager.NavigateTo("/LoginPage", true);
+        NavigationManager.NavigateTo("LoginPage");
     }
 }
+        @* var identity = ((ClaimsIdentity)HttpContext.User.Identity);
+        var name = identity.Claims.FirstOrDefault(c => c.Type == "name")?.Value;
+        var email = identity.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name")?.Value;
+        return new OkObjectResult(new { name, email });
+} *@

@@ -16,16 +16,9 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.RegisterConfiguration();
+// builder.Services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
+//     .AddAzureAD(options => builder.Configuration.Bind("AzureAd", options));
   
-  builder.Services.AddRazorPages().AddMvcOptions(options =>
-  {
-   var policy = new AuthorizationPolicyBuilder()
-                 .RequireAuthenticatedUser()
-                 .Build();
-             options.Filters.Add(new AuthorizeFilter(policy));
-  }).AddMicrosoftIdentityUI();
- 
 
 builder.Services.AddServerSideBlazor();
 
@@ -45,27 +38,12 @@ builder.Services.AddServerSideBlazor();
 // });
 
 
-builder.Services.Configure<CookiePolicyOptions>(options =>
-{
-    options.Secure = CookieSecurePolicy.Always;
-    options.HttpOnly = 0;
-    options.MinimumSameSitePolicy = SameSiteMode.Strict;
-});
 
-builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-       .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"))
-       .EnableTokenAcquisitionToCallDownstreamApi(new string[] { "User.Read" })
-       .AddSessionTokenCaches()
-       .AddCookiePolicy(options =>
-       {
-           options.Secure = CookieSecurePolicy.Always;
-           options.HttpOnly = 0;
-           options.MinimumSameSitePolicy = SameSiteMode.Lax;
-       });
 
+
+builder.RegisterConfiguration();
 
 builder.Services.RegisterServices();
-
 
 
 
@@ -79,15 +57,13 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
 // Use Authentication and Authorization
 
 
-app.UseAuthentication();
-app.UseAuthorization();
 
   // More code
   app.UseEndpoints(endpoints =>
@@ -97,6 +73,8 @@ app.UseAuthorization();
   });
  
 
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
@@ -111,6 +89,27 @@ static class ProgramExtensions
 
         builder.Services.AddOptions<OpenAi>()
             .Bind(builder.Configuration.GetSection(nameof(OpenAi)));
+        builder.Services.AddRazorPages().AddMvcOptions(options =>
+            {
+            var policy = new AuthorizationPolicyBuilder()
+                            .RequireAuthenticatedUser()
+                            .Build();
+                        options.Filters.Add(new AuthorizeFilter(policy));
+            });
+
+        builder.Services.Configure<CookiePolicyOptions>(options =>
+        {
+            options.Secure = CookieSecurePolicy.Always;
+            options.HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always;
+            options.MinimumSameSitePolicy = SameSiteMode.None;
+        });
+
+            
+        builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+            .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
+
+
+
 
     }
 
